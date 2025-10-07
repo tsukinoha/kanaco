@@ -1,11 +1,21 @@
-# KanaCo
+# KanaCo - Fast Kana Converter for UTF-8
 
 ## Overview
-KanaCo is the kana character converter inspired by the function mb_convert_kana in PHP.
+KanaCo is a UTF-8 string conversion library inspired by the PHP function mb_convert_kana. It can be used from Go, Python, and C, and operates extremely fast and lightweight.
+It is designed and implemented for system developers handling Japanese text.
+
+## Features
+- **High Performance** — Go version is implemented in pure Go. Python version is written in Cython + C as a native extension.  
+- **Cross-language** — Available for both Go, Python, C.
+- **UTF-8 only** — No legacy encoding handling.
+- **Lightweight and portable** — Minimal dependencies.
 
 ## Install
 
-    # go get github.com/elfincafe/kanaco
+### Go
+    $ go get github.com/elfincafe/kanaco
+### Python
+    $ pip install kanaco
 
 ## Mode
 
