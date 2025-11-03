@@ -85,6 +85,22 @@ void test_is_semi_voiced()
 
 void test_lower_r()
 {
+    character cases[4] = {
+        {"Ａ", strlen("Ａ"), CNV_LOWER_R, "", 0},
+        {"Ｚ", strlen("Ｚ"), CNV_LOWER_R, "", 0},
+        {"ａ", strlen("ａ"), CNV_LOWER_R, "", 0},
+        {"ｚ", strlen("ｚ"), CNV_LOWER_R, "", 0},
+    };
+    char *expected = "AZaz";
+
+    for (int i = 0; i < 4; i++)
+    {
+        lower_r(&cases[i]);
+        // printf("[%d] %s(%d) -> %s(%d): %c\n", i, (cases + i)->val, (cases + i)->len, (cases + i)->cval, (cases + i)->clen, expected[i]);
+        CU_ASSERT_STRING_EQUAL(&cases[i].cval, expected[i]);
+        CU_ASSERT_EQUAL(cases[i].clen, 1);
+        printf("\n");
+    }
 }
 
 void test_upper_r()

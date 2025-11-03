@@ -9,7 +9,7 @@ def setup():
     with open("../data/input.txt") as f:
         obj.input = f.read()
     return obj
-    
+
 class Data:
 
     def __init__(self):
@@ -19,6 +19,8 @@ class Data:
 class TestKanaco:
 
     @pytest.mark.parametrize("mode, file", (
+        ("s", "output.s.txt"),
+        ("S", "output.S.txt"),
         ("a", "output.a.txt"),
         ("A", "output.A.txt"),
         ("c", "output.c.txt"),
@@ -103,11 +105,9 @@ class TestKanaco:
         ("SrK", "output.S.r.K.txt"),
         ("SRk", "output.S.R.k.txt"),
         ("SRK", "output.S.R.K.txt"),
-        ("s", "output.s.txt"),
-        ("S", "output.S.txt"),
     ))
     def test_conv(self, setup, mode, file):
         res = kanaco.conv(setup.input, mode)
-        with open(os.path.join("..","data",file)) as f:
+        with open(os.path.join("..", "data", file)) as f:
             expected = f.read()
             assert res == expected
