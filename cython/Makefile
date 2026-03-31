@@ -1,6 +1,9 @@
 include ../common.mk
 
 OBJS=kanaco.c
+INCLUDES=-I. -I/usr/include $$($(PYCONFIG) --includes)
+CFLAGS=-Wall -O2 $$($(PYCONFIG) --cflags --libs)
+
 
 %.c: %.pyx
 	$(CYTHON) -3 -f -o $@ $^

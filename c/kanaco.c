@@ -13,8 +13,10 @@ bool is_1byte(const char *s, int len) {
 #ifdef DEBUG
   printf("Func: %s\n", "is_1byte");
 #endif
-
-  uint8_t c0 = *s & 0xff;
+  if (len==0) {
+    return false;
+  }
+  uint8_t c0 = *s;
   if (len > 0 && c0 < 0x80) {
     return true;
   }
@@ -25,9 +27,11 @@ bool is_2bytes(const char *s, int len) {
 #ifdef DEBUG
   printf("Func: %s\n", "is_2bytes");
 #endif
-
-  uint8_t c0 = *s & 0xff, c1 = *(s + 1) & 0xff;
-  if (len > 1 && c0 > 0xc1 && c0 < 0xe0 && c1 > 0x7f && c1 < 0xc0) {
+  if (len<2) {
+    return false;
+  }
+  uint8_t c0 = *s, c1 = *(s + 1);
+  if (c0 > 0xc1 && c0 < 0xe0 && c1 > 0x7f && c1 < 0xc0) {
     return true;
   }
   return false;
@@ -37,8 +41,11 @@ bool is_3bytes(const char *s, int len) {
 #ifdef DEBUG
   printf("Func: %s\n", "is_3bytes");
 #endif
-  uint8_t c0 = *s & 0xff, c1 = *(s + 1) & 0xff, c2 = *(s + 2) & 0xff;
-  if (len > 2 && c0 > 0xdf && c0 < 0xf0 && c1 > 0x7f && c1 < 0xc0 &&
+  if (len<3) {
+    return false;
+  }
+  uint8_t c0 = *s, c1 = *(s + 1), c2 = *(s + 2);
+  if (c0 > 0xdf && c0 < 0xf0 && c1 > 0x7f && c1 < 0xc0 &&
       c2 > 0x7f && c2 < 0xc0) {
     return true;
   }
@@ -49,9 +56,11 @@ bool is_4bytes(const char *s, int len) {
 #ifdef DEBUG
   printf("Func: %s\n", "is_4bytes");
 #endif
-  uint8_t c0 = *s & 0xff, c1 = *(s + 1) & 0xff, c2 = *(s + 2) & 0xff,
-          c3 = *(s + 3) & 0xff;
-  if (len > 3 && c0 > 0xef && c0 < 0xf5 && c1 > 0x7f && c1 < 0xc0 &&
+  if (len<4) {
+    return false;
+  }
+  uint8_t c0 = *s, c1 = *(s + 1), c2 = *(s + 2), c3 = *(s + 3);
+  if (c0 > 0xef && c0 < 0xf5 && c1 > 0x7f && c1 < 0xc0 &&
       c2 > 0x7f && c2 < 0xc0 && c3 > 0x7f && c3 < 0xc0) {
     return true;
   }
@@ -62,20 +71,27 @@ bool is_voiced(const char *s, int len) {
 #ifdef DEBUG
   printf("Func: %s\n", "is_voiced");
 #endif
-  if (len > 5) {
-    uint8_t c3 = *(s + 3) & 0xff, c4 = *(s + 4) & 0xff, c5 = *(s + 5) & 0xff;
-    if (c3 == 0xef && c4 == 0xbe && c5 == 0x9e) {
-      uint8_t c0 = *s & 0xff, c1 = *(s + 1) & 0xff, c2 = *(s + 2) & 0xff;
-      if (c0 == 0xef && c1 == 0xbd && c2 > 0xb5 && c2 < 0xc0) {  // ｶ - ｿ
-        return true;
-      } else if (c0 == 0xef && c1 == 0xbe && c2 > 0x79 && c2 < 0x85) {  // ﾀ - ﾄ
-        return true;
-      } else if (c0 == 0xef && c1 == 0xbe && c2 > 0x89 && c2 < 0x8f) {  // ﾊ - ﾎ
-        return true;
-      } else if (c0 == 0xef && c1 == 0xbd && c2 == 0xb3) {  // ｳ
-        return true;
-      }
+  if (len < 6) {
+    return false;
+  }
+  uint8_t c3 = *(s + 3), c4 = *(s + 4), c5 = *(s + 5);
+  if (c3 != 0xef || c4 != 0xbe || c5 != 0x9e) {
+    return false;
+  }
+  uint8_t c0 = *s, c1 = *(s + 1), c2 = *(s + 2);
+  if (c0 != 0xef) {
+    return false;
+  }
+  if (c1 == 0xbd && c2 > 0xb5 && c2 < 0xc0) {  // ｶ - ｿ
+    return true;
+  } else if (c1 == 0xbe) {
+    if (c2 > 0x79 && c2 < 0x85) {  // ﾀ - ﾄ
+      return true;
+    } else if (c2 > 0x89 && c2 < 0x8f) {  // ﾊ - ﾎ
+      return true;
     }
+  } else if (c1 == 0xbd && c2 == 0xb3) {  // ｳ
+    return true;
   }
   return false;
 }
@@ -84,14 +100,16 @@ bool is_semi_voiced(const char *s, int len) {
 #ifdef DEBUG
   printf("Func: %s\n", "is_semi_voiced");
 #endif
-  if (len > 5) {
-    uint8_t c3 = *(s + 3) & 0xff, c4 = *(s + 4) & 0xff, c5 = *(s + 5) & 0xff;
-    if (c3 == 0xef && c4 == 0xbe && c5 == 0x9f) {
-      uint8_t c0 = *s & 0xff, c1 = *(s + 1) & 0xff, c2 = *(s + 2) & 0xff;
-      if (c0 == 0xef && c1 == 0xbe && c2 > 0x89 && c2 < 0x8f) {  // ﾊ - ﾎ
-        return true;
-      }
-    }
+  if (len < 6) {
+    return false;
+  }
+  uint8_t c3 = *(s + 3), c4 = *(s + 4), c5 = *(s + 5);
+  if (c3 != 0xef || c4 != 0xbe || c5 != 0x9f) {
+    return false;
+  }
+  uint8_t c0 = *s, c1 = *(s + 1), c2 = *(s + 2);
+  if (c0 == 0xef && c1 == 0xbe && c2 > 0x89 && c2 < 0x8f) {  // ﾊ - ﾎ
+    return true;
   }
   return false;
 }
@@ -104,19 +122,25 @@ void lower_r(character *c) {
   if (!(c->conv & CNV_LOWER_R)) {
     return;
   }
-  uint8_t c2 = (uint8_t)(*(c->val + 2) & 0xff);
+  uint8_t c2 = (uint8_t)(*(c->val + 2));
   // Ａ-Ｚ -> A-Z
   if (c2 >= 0xa1 && c2 <= 0xba) {
-    *(c->cval + 0) = (char)((c2 - 0x60) & 0xff);
-    *(c->cval + 1) = 0x00;
     c->clen = 1;
+    uint8_t src[] = {(c2 - 0x60), 0x00};
+    memcpy(c->cval, src, c->clen+1);
+    // *(c->cval + 0) = (char)(c2 - 0x60);
+    // *(c->cval + 1) = 0x00;
     return;
   }
   // ａ-ｚ -> a-z
   if (c2 >= 0x81 && c2 <= 0x9a) {
-    *(c->cval + 0) = (char)((c2 - 0x20) & 0xff);
-    *(c->cval + 1) = 0x00;
     c->clen = 1;
+    uint8_t src[] = {(c2 - 0x20), 0x00};
+    memcpy(c->cval, src, c->clen+1);
+
+    // *(c->cval + 0) = (char)(c2 - 0x20);
+    // *(c->cval + 1) = 0x00;
+    // c->clen = 1;
     return;
   }
 }
@@ -132,16 +156,20 @@ void upper_r(character *c) {
   uint8_t c0 = (uint8_t)(*(c->val + 0));
   if (c0 >= 0x41 && c0 <= 0x5a) {  // A-Z -> Ａ-Ｚ
     c->clen = 3;
-    *(c->cval + 0) = (char)(0xef & 0xff);
-    *(c->cval + 1) = (char)(0xbc & 0xff);
-    *(c->cval + 2) = (char)((c0 + 0x60) & 0xff);
-    *(c->cval + c->clen) = 0x00;
+    uint8_t src[] = {0xef, 0xbc, (c0 + 0x60), 0x00};
+    memcpy(c->cval, src, c->clen+1);
+    // *(c->cval + 0) = (char)(0xef & 0xff);
+    // *(c->cval + 1) = (char)(0xbc & 0xff);
+    // *(c->cval + 2) = (char)((c0 + 0x60) & 0xff);
+    // *(c->cval + c->clen) = 0x00;
   } else if (c0 >= 0x61 && c0 <= 0x7a) {  // a-z -> ａ-ｚ
     c->clen = 3;
-    *(c->cval + 0) = (char)(0xef & 0xff);
-    *(c->cval + 1) = (char)(0xbd & 0xff);
-    *(c->cval + 2) = (char)((c0 + 0x20) & 0xff);
-    *(c->cval + c->clen) = 0x00;
+    uint8_t src[] = {0xef, 0xbd, (c0 + 0x20), 0x00};
+    memcpy(c->cval, src, c->clen+1);
+    // *(c->cval + 0) = (char)(0xef & 0xff);
+    // *(c->cval + 1) = (char)(0xbd & 0xff);
+    // *(c->cval + 2) = (char)((c0 + 0x20) & 0xff);
+    // *(c->cval + c->clen) = 0x00;
   }
 }
 
@@ -155,8 +183,10 @@ void lower_n(character *c) {
   }
   uint8_t c2 = (uint8_t)(*(c->val + 2));
   c->clen = 1;
-  *(c->cval + 0) = (char)((c2 - 0x60) & 0xff);
-  *(c->cval + c->clen) = 0x00;
+  uint8_t src[] = {(c2 - 0x60), 0x00};
+  memcpy(c->cval, src, c->clen+1);
+  // *(c->cval + 0) = (char)((c2 - 0x60) & 0xff);
+  // *(c->cval + c->clen) = 0x00;
 }
 
 void upper_n(character *c) {
@@ -168,10 +198,12 @@ void upper_n(character *c) {
   }
   uint8_t c0 = (uint8_t)(*(c->val + 0) & 0xff);
   c->clen = 3;
-  *(c->cval + 0) = (char)(0xef & 0xff);
-  *(c->cval + 1) = (char)(0xbc & 0xff);
-  *(c->cval + 2) = (char)((c0 + 0x60) & 0xff);
-  *(c->cval + c->clen) = 0x00;
+  uint8_t src[] = {0xef, 0xbc, (c0 + 0x60), 0x00};
+  memcpy(c->cval, src, c->clen+1);
+  // *(c->cval + 0) = (char)(0xef & 0xff);
+  // *(c->cval + 1) = (char)(0xbc & 0xff);
+  // *(c->cval + 2) = (char)((c0 + 0x60) & 0xff);
+  // *(c->cval + c->clen) = 0x00;
 }
 
 void lower_a(character *c) {
@@ -185,12 +217,16 @@ void lower_a(character *c) {
   uint8_t c1 = (uint8_t)(*(c->val + 1)), c2 = (uint8_t)(*(c->val + 2));
   if (c1 == 0xbc && c2 >= 0x81 && c2 <= 0xbf) {
     c->clen = 1;
-    *(c->cval + 0) = (char)((c2 - 0x60) & 0xff);
-    *(c->cval + c->clen) = 0x00;
+    uint8_t src[] = {(c2 - 0x60), 0x00};
+    memcpy(c->cval, src, c->clen+1);
+    // *(c->cval + 0) = (char)((c2 - 0x60) & 0xff);
+    // *(c->cval + c->clen) = 0x00;
   } else if (c1 == 0xbd && c2 >= 0x80 && c2 <= 0x9d) {
     c->clen = 1;
-    *(c->cval + 0) = (char)((c2 - 0x20) & 0xff);
-    *(c->cval + c->clen) = 0x00;
+    uint8_t src[] = {(c2 - 0x20), 0x00};
+    memcpy(c->cval, src, c->clen+1);
+    // *(c->cval + 0) = (char)((c2 - 0x20) & 0xff);
+    // *(c->cval + c->clen) = 0x00;
   }
 }
 
@@ -205,16 +241,20 @@ void upper_a(character *c) {
   uint8_t c0 = (uint8_t)(*(c->val + 0));
   if (c0 >= 0x21 && c0 <= 0x5f) {
     c->clen = 3;
-    *(c->cval + 0) = (char)(0xef & 0xff);
-    *(c->cval + 1) = (char)(0xbc & 0xff);
-    *(c->cval + 2) = (char)((c0 + 0x60) & 0xff);
-    *(c->cval + c->clen) = 0x00;
+    uint8_t src[] = {0xef, 0xbc, (c0 + 0x60), 0x00};
+    memcpy(c->cval, src, c->clen+1);
+    // *(c->cval + 0) = (char)(0xef & 0xff);
+    // *(c->cval + 1) = (char)(0xbc & 0xff);
+    // *(c->cval + 2) = (char)((c0 + 0x60) & 0xff);
+    // *(c->cval + c->clen) = 0x00;
   } else if (c0 >= 0x60 && c0 <= 0x7d) {
     c->clen = 3;
-    *(c->cval + 0) = (char)(0xef & 0xff);
-    *(c->cval + 1) = (char)(0xbd & 0xff);
-    *(c->cval + 2) = (char)((c0 + 0x20) & 0xff);
-    *(c->cval + c->clen) = 0x00;
+    uint8_t src[] = {0xef, 0xbd, (c0 + 0x20), 0x00};
+    memcpy(c->cval, src, c->clen+1);
+    // *(c->cval + 0) = (char)(0xef & 0xff);
+    // *(c->cval + 1) = (char)(0xbd & 0xff);
+    // *(c->cval + 2) = (char)((c0 + 0x20) & 0xff);
+    // *(c->cval + c->clen) = 0x00;
   }
 }
 
@@ -227,8 +267,10 @@ void lower_s(character *c) {
     return;
   }
   c->clen = 1;
-  *(c->cval + 0) = (char)(0x20 & 0xff);
-  *(c->cval + c->clen) = 0x00;
+  uint8_t src[] = {0x20, 0x00};
+  memcpy(c->cval, src, c->clen+1);
+  // *(c->cval + 0) = (char)(0x20 & 0xff);
+  // *(c->cval + c->clen) = 0x00;
 }
 
 void upper_s(character *c) {
@@ -240,10 +282,12 @@ void upper_s(character *c) {
     return;
   }
   c->clen = 3;
-  *(c->cval + 0) = (char)(0xe3 & 0xff);
-  *(c->cval + 1) = (char)(0x80 & 0xff);
-  *(c->cval + 2) = (char)(0x80 & 0xff);
-  *(c->cval + c->clen) = 0x00;
+  uint8_t src[] = {0xe3, 0x80, 0x80, 0x00};
+  memcpy(c->cval, src, c->clen+1);
+  // *(c->cval + 0) = (char)(0xe3 & 0xff);
+  // *(c->cval + 1) = (char)(0x80 & 0xff);
+  // *(c->cval + 2) = (char)(0x80 & 0xff);
+  // *(c->cval + c->clen) = 0x00;
 }
 
 void lower_k(character *c) {
@@ -1388,28 +1432,36 @@ void lower_c(character *c) {
   switch (c1) {
     case 0x82:  // ァ - タ
       if (c2 >= 0xa1 && c2 <= 0xbf) {
-        *(c->cval + 0) = (char)(0xe3 & 0xff);
-        *(c->cval + 1) = (char)(0x81 & 0xff);
-        *(c->cval + 2) = (char)((c2 - 0x20) & 0xff);
-        *(c->cval + c->clen) = 0x00;
+        uint8_t src[] = {0xe3, 0x81, (c2 - 0x20), 0x00}; 
+        memcpy(c->cval, src, c->clen+1);
+        // *(c->cval + 0) = (char)(0xe3 & 0xff);
+        // *(c->cval + 1) = (char)(0x81 & 0xff);
+        // *(c->cval + 2) = (char)((c2 - 0x20) & 0xff);
+        // *(c->cval + c->clen) = 0x00;
       }
       break;
     case 0x83:
       if (c2 >= 0x80 && c2 <= 0x9f) {  // ダ - ミ
-        *(c->cval + 0) = (char)(0xe3 & 0xff);
-        *(c->cval + 1) = (char)(0x81 & 0xff);
-        *(c->cval + 2) = (char)((c2 + 0x20) & 0xff);
-        *(c->cval + c->clen) = 0x00;
+        uint8_t src[] = {0xe3, 0x81, (c2 + 0x20), 0x00}; 
+        memcpy(c->cval, src, c->clen+1);
+        // *(c->cval + 0) = (char)(0xe3 & 0xff);
+        // *(c->cval + 1) = (char)(0x81 & 0xff);
+        // *(c->cval + 2) = (char)((c2 + 0x20) & 0xff);
+        // *(c->cval + c->clen) = 0x00;
       } else if (c2 >= 0xa0 && c2 <= 0xb3) {  // ム - ン
-        *(c->cval + 0) = (char)(0xe3 & 0xff);
-        *(c->cval + 1) = (char)(0x82 & 0xff);
-        *(c->cval + 2) = (char)((c2 - 0x20) & 0xff);
-        *(c->cval + c->clen) = 0x00;
+        uint8_t src[] = {0xe3, 0x82, (c2 - 0x20), 0x00}; 
+        memcpy(c->cval, src, c->clen+1);
+        // *(c->cval + 0) = (char)(0xe3 & 0xff);
+        // *(c->cval + 1) = (char)(0x82 & 0xff);
+        // *(c->cval + 2) = (char)((c2 - 0x20) & 0xff);
+        // *(c->cval + c->clen) = 0x00;
       } else if (c2 >= 0xbd && c2 <= 0xbe) {  // ヽヾ
-        *(c->cval + 0) = (char)(0xe3 & 0xff);
-        *(c->cval + 1) = (char)(0x82 & 0xff);
-        *(c->cval + 2) = (char)((c2 - 0x20) & 0xff);
-        *(c->cval + c->clen) = 0x00;
+        uint8_t src[] = {0xe3, 0x82, (c2 - 0x20), 0x00}; 
+        memcpy(c->cval, src, c->clen+1);
+        // *(c->cval + 0) = (char)(0xe3 & 0xff);
+        // *(c->cval + 1) = (char)(0x82 & 0xff);
+        // *(c->cval + 2) = (char)((c2 - 0x20) & 0xff);
+        // *(c->cval + c->clen) = 0x00;
       }
       break;
   }
@@ -1428,28 +1480,36 @@ void upper_c(character *c) {
   switch (c1) {
     case 0x81:
       if (c2 >= 0x81 && c2 <= 0x9f) {  // ぁ - た
-        *(c->cval + 0) = (char)(0xe3 & 0xff);
-        *(c->cval + 1) = (char)(0x82 & 0xff);
-        *(c->cval + 2) = (char)((c2 + 0x20) & 0xff);
-        *(c->cval + c->clen) = 0x00;
+        uint8_t src[] = {0xe3, 0x82, (c2 + 0x20), 0x00}; 
+        memcpy(c->cval, src, c->clen+1);
+        // *(c->cval + 0) = (char)(0xe3 & 0xff);
+        // *(c->cval + 1) = (char)(0x82 & 0xff);
+        // *(c->cval + 2) = (char)((c2 + 0x20) & 0xff);
+        // *(c->cval + c->clen) = 0x00;
       } else if (c2 >= 0xa0 && c2 <= 0xbf) {  // だ - み
-        *(c->cval + 0) = (char)(0xe3 & 0xff);
-        *(c->cval + 1) = (char)(0x83 & 0xff);
-        *(c->cval + 2) = (char)((c2 - 0x20) & 0xff);
-        *(c->cval + c->clen) = 0x00;
+        uint8_t src[] = {0xe3, 0x83, (c2 - 0x20), 0x00}; 
+        memcpy(c->cval, src, c->clen+1);
+        // *(c->cval + 0) = (char)(0xe3 & 0xff);
+        // *(c->cval + 1) = (char)(0x83 & 0xff);
+        // *(c->cval + 2) = (char)((c2 - 0x20) & 0xff);
+        // *(c->cval + c->clen) = 0x00;
       }
       break;
     case 0x82:
       if (c2 >= 0x80 && c2 <= 0x93) {  // む - ん
-        *(c->cval + 0) = (char)(0xe3 & 0xff);
-        *(c->cval + 1) = (char)(0x83 & 0xff);
-        *(c->cval + 2) = (char)((c2 + 0x20) & 0xff);
-        *(c->cval + c->clen) = 0x00;
+        uint8_t src[] = {0xe3, 0x83, (c2 + 0x20), 0x00}; 
+        memcpy(c->cval, src, c->clen+1);
+        // *(c->cval + 0) = (char)(0xe3 & 0xff);
+        // *(c->cval + 1) = (char)(0x83 & 0xff);
+        // *(c->cval + 2) = (char)((c2 + 0x20) & 0xff);
+        // *(c->cval + c->clen) = 0x00;
       } else if (c2 >= 0x9d && c2 <= 0x9e) {  // ゝゞ
-        *(c->cval + 0) = (char)(0xe3 & 0xff);
-        *(c->cval + 1) = (char)(0x83 & 0xff);
-        *(c->cval + 2) = (char)((c2 + 0x20) & 0xff);
-        *(c->cval + c->clen) = 0x00;
+        uint8_t src[] = {0xe3, 0x83, (c2 + 0x20), 0x00}; 
+        memcpy(c->cval, src, c->clen+1);
+        // *(c->cval + 0) = (char)(0xe3 & 0xff);
+        // *(c->cval + 1) = (char)(0x83 & 0xff);
+        // *(c->cval + 2) = (char)((c2 + 0x20) & 0xff);
+        // *(c->cval + c->clen) = 0x00;
       }
       break;
   }
@@ -1459,12 +1519,30 @@ void asis(character *c) {
 #ifdef DEBUG
   printf("Func: %s [%s]\n", "asis", c->val);
 #endif
-
-  for (uint8_t i = 0; i < c->len; i++) {
-    *(c->cval + i) = (char)(*(c->val + i) & 0xff);
-  }
   c->clen = c->len;
-  *(c->cval + c->clen) = 0x00;
+  switch (c->clen) {
+    case 1:
+      uint8_t src1[] = {*(c->val), 0x00};
+      memcpy(c->cval, src1, c->clen+1);
+      break;
+    case 2:
+      uint8_t src2[] = {*(c->val), *(c->val+1), 0x00};
+      memcpy(c->cval, src2, c->clen+1);
+      break;
+    case 3:
+      uint8_t src3[] = {*(c->val), *(c->val+1), *(c->val+2), 0x00};
+      memcpy(c->cval, src3, c->clen+1);
+      break;
+    case 4:
+      uint8_t src4[] = {*(c->val), *(c->val+1), *(c->val+2), *(c->val+3), 0x00};
+      memcpy(c->cval, src4, c->clen+1);
+      break;
+    default:
+      for (uint8_t i = 0; i < c->clen; i++) {
+        *(c->cval + i) = (*(c->val + i));
+      }
+      *(c->cval+c->clen) = 0x00;
+  }
 }
 
 void extract(character *c, const char *s, int len) {
@@ -1473,21 +1551,21 @@ void extract(character *c, const char *s, int len) {
 #endif
   c->len = 1;
   if (is_1byte(s, len)) {
-    uint8_t c0 = *s & 0xff;
+    uint8_t c0 = *s;
     if (c0 == 0x20) { // Space
       c->conv = CNV_UPPER_S;
-    } else if (c0 >= 0x30 && c0 <= 0x39) { // 0 - 9
-      c->conv = CNV_UPPER_A | CNV_UPPER_N;
-    } else if (c0 >= 0x41 && c0 <= 0x5a) { // A - Z
-      c->conv = CNV_UPPER_A | CNV_UPPER_R;
     } else if (c0 >= 0x61 && c0 <= 0x7a) { // a - z
       c->conv = CNV_UPPER_A | CNV_UPPER_R;
+    } else if (c0 >= 0x41 && c0 <= 0x5a) { // A - Z
+      c->conv = CNV_UPPER_A | CNV_UPPER_R;
+    } else if (c0 >= 0x30 && c0 <= 0x39) { // 0 - 9
+      c->conv = CNV_UPPER_A | CNV_UPPER_N;
     } else if (c0 >= 0x21 && c0 <= 0x7d && c0 != 0x22 && c0 != 0x27 &&
                c0 != 0x5c) {
       c->conv = CNV_UPPER_A;
     }
   } else if (is_3bytes(s, len)) {
-    uint8_t c0 = *s & 0xff, c1 = *(s + 1) & 0xff, c2 = *(s + 2) & 0xff;
+    uint8_t c0 = *s, c1 = *(s + 1), c2 = *(s + 2);
     c->len = 3;
     if (c0 == 0xef) {
       if (c1 == 0xbc) {
@@ -1572,9 +1650,10 @@ void extract(character *c, const char *s, int len) {
     c->len = 1;
   }
 
-  for (int i = 0; i < c->len; i++) {
-    *(c->val + i) = *(s + i) & 0xff;
-  }
+  memcpy(c->val, s, c->len);
+  // for (int i = 0; i < c->len; i++) {
+  //   *(c->val + i) = *(s + i);
+  // }
   *(c->val + c->len) = 0x00;
 }
 

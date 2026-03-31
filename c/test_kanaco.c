@@ -91,15 +91,13 @@ void test_lower_r()
         {"ａ", strlen("ａ"), CNV_LOWER_R, "", 0},
         {"ｚ", strlen("ｚ"), CNV_LOWER_R, "", 0},
     };
-    char *expected = "AZaz";
+    uint8_t expected[4][8] = {"A", "Z", "a", "z"};
 
     for (int i = 0; i < 4; i++)
     {
         lower_r(&cases[i]);
-        // printf("[%d] %s(%d) -> %s(%d): %c\n", i, (cases + i)->val, (cases + i)->len, (cases + i)->cval, (cases + i)->clen, expected[i]);
-        CU_ASSERT_STRING_EQUAL(&cases[i].cval, expected[i]);
+        CU_ASSERT_STRING_EQUAL(cases[i].cval, expected[i]);
         CU_ASSERT_EQUAL(cases[i].clen, 1);
-        printf("\n");
     }
 }
 

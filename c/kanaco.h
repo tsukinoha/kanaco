@@ -5,27 +5,27 @@
 #include <stdint.h>
 
 #define CNV_ASIS 0
-#define CNV_LOWER_R 1
-#define CNV_UPPER_R 2
-#define CNV_LOWER_N 4
-#define CNV_UPPER_N 8
-#define CNV_LOWER_A 16
-#define CNV_UPPER_A 32
-#define CNV_LOWER_S 64
-#define CNV_UPPER_S 128
-#define CNV_LOWER_K 256
-#define CNV_UPPER_K 512
-#define CNV_LOWER_H 1024
-#define CNV_UPPER_H 2048
-#define CNV_LOWER_C 4096
-#define CNV_UPPER_C 8192
+#define CNV_LOWER_R 2<<0
+#define CNV_UPPER_R 2<<1
+#define CNV_LOWER_N 2<<2
+#define CNV_UPPER_N 2<<3
+#define CNV_LOWER_A 2<<4
+#define CNV_UPPER_A 2<<5
+#define CNV_LOWER_S 2<<6
+#define CNV_UPPER_S 2<<7
+#define CNV_LOWER_K 2<<8
+#define CNV_UPPER_K 2<<9
+#define CNV_LOWER_H 2<<10
+#define CNV_UPPER_H 2<<11
+#define CNV_LOWER_C 2<<12
+#define CNV_UPPER_C 2<<13
 
 typedef struct _character
 {
-  uint8_t val[8];
+  char val[8];
   uint8_t len;
   uint16_t conv; // CNV_LOWER_* or CNV_UPPER_*
-  char cval[8];  // converted value
+  uint8_t cval[8];  // converted value
   uint8_t clen;  // converted value length;
 } character;
 
