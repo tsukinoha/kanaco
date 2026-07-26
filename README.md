@@ -12,10 +12,7 @@ It is designed and implemented for system developers handling Japanese text.
 
 ## Install
 
-### Go
-    $ go get github.com/tsukinoha/kanaco
-### Python
-    $ pip install kanaco
+    # go get github.com/tsukinoha/kanaco
 
 ## Mode
 
