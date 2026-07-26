@@ -5,7 +5,7 @@ KanaCo is the kana character converter inspired by the function mb_convert_kana 
 
 ## Install
 
-    # go get github.com/elfincafe/kanaco
+    # go get github.com/tsukinoha/kanaco
 
 ## Mode
 
@@ -33,7 +33,7 @@ package main
 import (
     "io"
     "io/ioutil"
-    "github.com/elfincafe/kanaco"
+    "github.com/tsukinoha/kanaco"
 )
 
 func main () {
