@@ -13,7 +13,7 @@ It is designed and implemented for system developers handling Japanese text.
 ## Install
 
 ### Go
-    $ go get github.com/elfincafe/kanaco
+    $ go get github.com/tsukinoha/kanaco
 ### Python
     $ pip install kanaco
 
@@ -43,7 +43,7 @@ package main
 import (
     "io"
     "io/ioutil"
-    "github.com/elfincafe/kanaco"
+    "github.com/tsukinoha/kanaco"
 )
 
 func main () {
