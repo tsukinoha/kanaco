@@ -1,16 +1,26 @@
 include ../common.mk
 
-%.static.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $^
+all: libkanaco.a libkanaco.so
 
-%.shared.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDES) -fPIC -c -o $@ $^
+%.static.o: %.c kanaco.h
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-all: kanaco.static.o kanaco.shared.o
-	$(AR) rcsv libkanaco.a kanaco.static.o
-	$(CC) $(CFLAGS) $(INCLUDES) -o libkanaco.so kanaco.shared.o -shared
+%.shared.o: %.c kanaco.h
+	$(CC) $(CFLAGS) -fPIC -c -o $@ $<
+
+libkanaco.a: kanaco.static.o
+	$(AR) rcs $@ $^
+
+libkanaco.so: kanaco.shared.o
+	$(CC) -shared -o $@ $^
+
+test_kanaco: test_kanaco.c libkanaco.a
+	$(CC) $(CFLAGS) -o $@ $< libkanaco.a
+
+test: test_kanaco
+	./test_kanaco ../data
 
 clean:
-	$(RM) -f *.o *.a *.so
+	$(RM) -f *.o *.a *.so test_kanaco
 
-.PHONY: all clean
+.PHONY: all test clean

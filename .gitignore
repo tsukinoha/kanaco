@@ -23,3 +23,7 @@ go.work
 .pytest_cache
 __pycache__
 **/__pycache__
+
+# Build outputs of c/ and cython/
+c/test_kanaco
+cython/kanaco.c
