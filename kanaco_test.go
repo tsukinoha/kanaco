@@ -142,12 +142,15 @@ func TestRead(t *testing.T) {
 	for _, path := range paths {
 		expects, _ := os.ReadFile(path)
 		mode := mode4Test(path)
-		f, _ := os.Open("./data/input.txt")
+		f, err := os.Open("./data/input.txt")
+		if err != nil {
+			t.Fatal(err.Error())
+		}
 		r := NewReader(f, mode)
 		results := []byte{}
+		buf := make([]byte, 4096)
 		for {
-			buf := make([]byte, 4096)
-			_, err := r.Read(buf)
+			n, err := r.Read(buf)
 			if err == io.EOF {
 				break
 			}
@@ -155,24 +158,47 @@ func TestRead(t *testing.T) {
 				t.Error(err.Error())
 				break
 			}
-			results = append(results, buf...)
+			results = append(results, buf[:n]...)
 		}
-		if strings.Compare(string(results), string(expects)) == 0 {
+		f.Close()
+		if !bytes.Equal(results, expects) {
 			rLines := bytes.Split(results, []byte("\n"))
 			eLines := bytes.Split(expects, []byte("\n"))
 			msg := strings.Builder{}
 			msg.WriteString(fmt.Sprintf("\n[%s] ---------\n", mode))
 			for k, et := range eLines {
-				rs := rLines[k]
-				if strings.Compare(string(et), string(rs)) != 0 {
-					msg.WriteString(fmt.Sprintf("Expect(%d): ", k))
+				var rs []byte
+				if k < len(rLines) {
+					rs = rLines[k]
+				}
+				if !bytes.Equal(et, rs) {
+					msg.WriteString(fmt.Sprintf("Expect(%d): ", k+1))
 					msg.Write(et)
-					msg.WriteString(fmt.Sprintf("\nResult(%d): ", k))
+					msg.WriteString(fmt.Sprintf("\nResult(%d): ", k+1))
 					msg.Write(rs)
 					msg.WriteString("\n")
 				}
 			}
 			t.Error(msg.String())
 		}
+	}
+}
+
+func TestReadLastLineWithoutNewline(t *testing.T) {
+	r := NewReader(strings.NewReader("ｱｲｳ\nｶﾞｷﾞ"), "H")
+	buf := make([]byte, 64)
+	results := []byte{}
+	for {
+		n, err := r.Read(buf)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+		results = append(results, buf[:n]...)
+	}
+	if expect := "あいう\nがぎ"; string(results) != expect {
+		t.Errorf("Expect: %q, Result: %q", expect, results)
 	}
 }

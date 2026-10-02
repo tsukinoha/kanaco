@@ -6,5 +6,4 @@ RM=rm
 PYCONFIG=python3-config
 PYTEST=pytest
 
-INCLUDES=-I. -I/usr/include $$($(PYCONFIG) --includes)
-CFLAGS=-Wall -O2 $$($(PYCONFIG) --cflags --libs)
+CFLAGS=-std=c99 -Wall -Wextra -O2
