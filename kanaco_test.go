@@ -59,8 +59,7 @@ func TestByte(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	// paths, err := filepath.Glob("./data/" + output)
-	paths, err := filepath.Glob("./data/output.H.txt")
+	paths, err := filepath.Glob("./data/" + output)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -77,8 +76,11 @@ func TestByte(t *testing.T) {
 			msg := strings.Builder{}
 			msg.WriteString(fmt.Sprintf("\n[%s] ---------\n", mode))
 			for k, e := range expects {
-				r := results[k]
-				if strings.Compare(string(r), string(e)) != 0 {
+				var r []byte
+				if k < len(results) {
+					r = results[k]
+				}
+				if !bytes.Equal(r, e) {
 					msg.WriteString(fmt.Sprintf("Expect(%d): ", k))
 					msg.Write(e)
 					msg.WriteString(fmt.Sprintf("\nResult(%d): ", k))
@@ -137,67 +139,75 @@ func TestNewReader(t *testing.T) {
 	}
 }
 
-func TestRead(t *testing.T) {
-	paths, _ := filepath.Glob("./data/" + output)
-	for _, path := range paths {
-		expects, _ := os.ReadFile(path)
-		mode := mode4Test(path)
-		f, err := os.Open("./data/input.txt")
-		if err != nil {
-			t.Fatal(err.Error())
-		}
-		r := NewReader(f, mode)
-		results := []byte{}
-		buf := make([]byte, 4096)
-		for {
-			n, err := r.Read(buf)
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				t.Error(err.Error())
-				break
-			}
-			results = append(results, buf[:n]...)
-		}
-		f.Close()
-		if !bytes.Equal(results, expects) {
-			rLines := bytes.Split(results, []byte("\n"))
-			eLines := bytes.Split(expects, []byte("\n"))
-			msg := strings.Builder{}
-			msg.WriteString(fmt.Sprintf("\n[%s] ---------\n", mode))
-			for k, et := range eLines {
-				var rs []byte
-				if k < len(rLines) {
-					rs = rLines[k]
-				}
-				if !bytes.Equal(et, rs) {
-					msg.WriteString(fmt.Sprintf("Expect(%d): ", k+1))
-					msg.Write(et)
-					msg.WriteString(fmt.Sprintf("\nResult(%d): ", k+1))
-					msg.Write(rs)
-					msg.WriteString("\n")
-				}
-			}
-			t.Error(msg.String())
-		}
-	}
-}
-
-func TestReadLastLineWithoutNewline(t *testing.T) {
-	r := NewReader(strings.NewReader("ｱｲｳ\nｶﾞｷﾞ"), "H")
-	buf := make([]byte, 64)
+func readAll(t *testing.T, r *Reader) []byte {
+	t.Helper()
 	results := []byte{}
+	buf := make([]byte, 4096)
 	for {
 		n, err := r.Read(buf)
 		if err == io.EOF {
-			break
+			return results
 		}
 		if err != nil {
 			t.Fatal(err.Error())
 		}
 		results = append(results, buf[:n]...)
 	}
+}
+
+func TestRead(t *testing.T) {
+	content, err := os.ReadFile("./data/input.txt")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	paths, err := filepath.Glob("./data/" + output)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	if len(paths) == 0 {
+		t.Fatal("no output files")
+	}
+	for _, path := range paths {
+		mode := mode4Test(path)
+		expect, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+		// The data files end with a newline. Also read the input without it,
+		// so that a last line ending at EOF is checked as well.
+		for _, trim := range []bool{false, true} {
+			in, exp := content, expect
+			if trim {
+				in = bytes.TrimSuffix(in, []byte("\n"))
+				exp = bytes.TrimSuffix(exp, []byte("\n"))
+			}
+			results := readAll(t, NewReader(bytes.NewReader(in), mode))
+			if !bytes.Equal(results, exp) {
+				rLines := bytes.Split(results, []byte("\n"))
+				eLines := bytes.Split(exp, []byte("\n"))
+				msg := strings.Builder{}
+				msg.WriteString(fmt.Sprintf("\n[%s] (trailing newline removed: %t) ---------\n", mode, trim))
+				for k, et := range eLines {
+					var rs []byte
+					if k < len(rLines) {
+						rs = rLines[k]
+					}
+					if !bytes.Equal(et, rs) {
+						msg.WriteString(fmt.Sprintf("Expect(%d): ", k+1))
+						msg.Write(et)
+						msg.WriteString(fmt.Sprintf("\nResult(%d): ", k+1))
+						msg.Write(rs)
+						msg.WriteString("\n")
+					}
+				}
+				t.Error(msg.String())
+			}
+		}
+	}
+}
+
+func TestReadLastLineWithoutNewline(t *testing.T) {
+	results := readAll(t, NewReader(strings.NewReader("ｱｲｳ\nｶﾞｷﾞ"), "H"))
 	if expect := "あいう\nがぎ"; string(results) != expect {
 		t.Errorf("Expect: %q, Result: %q", expect, results)
 	}
